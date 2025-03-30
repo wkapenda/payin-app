@@ -1,0 +1,11 @@
+@use "../../styles/main" as *;
+
+.quote-summary-table {
+  width: 100%;
+  border-top: 1px solid $border-color;
+
+  &__row {
+    padding: 13px 0;
+    border-bottom: 1px solid $border-color;
+  }
+}

@@ -1,0 +1,41 @@
+@import "variables";
+
+.heading {
+  height: 28px;
+  font-size: 20px;
+  line-height: 1.4;
+  letter-spacing: normal;
+  text-align: center;
+  color: $primary-color;
+}
+
+.currency-value {
+  height: 40px;
+  font-size: 32px;
+  line-height: 1.25;
+  letter-spacing: normal;
+  text-align: center;
+  color: $primary-color;
+}
+
+.currency {
+  font-size: 20px;
+}
+
+.text-p {
+  max-width: 303px;
+  flex-grow: 1;
+  font-size: 15px;
+  line-height: 1.57;
+  letter-spacing: normal;
+  color: $secondary-color;
+}
+
+.value-label {
+  @extend .text-p;
+  font-size: 14px;
+}
+
+.value {
+  color: $primary-color;
+}

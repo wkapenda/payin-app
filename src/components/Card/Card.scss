@@ -3,9 +3,8 @@
 .card {
   width: 100%;
   max-width: 460px;
-  flex-grow: 0;
   @include flex-center;
-  gap: 25px;
+  // gap: 25px;
   padding: 25px;
   border-radius: 10px;
   background-color: $card-bg;

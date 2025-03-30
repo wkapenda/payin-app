@@ -1,0 +1,36 @@
+@use "../../styles/main" as *;
+
+.primary-button {
+  height: 40px;
+  width: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  background-color: $primary-color-btn;
+  cursor: pointer;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &__text {
+    width: 54px;
+    height: 24px;
+    flex-grow: 0;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.71;
+    text-align: center;
+    color: #fff;
+  }
+
+  &__icon {
+    width: 16px;
+    height: 16px;
+  }
+}

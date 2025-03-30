@@ -1,11 +1,11 @@
+import AcceptQuoteCard from "@/components/AcceptQuoteCard/AcceptQuoteCard";
 import CenteredLayout from "@/components/layouts/CenteredLayout";
-import PayQuoteCard from "@/components/PayQuoteCard/PayQuoteCard";
 import React from "react";
 
 const page = () => {
   return (
     <CenteredLayout>
-      <PayQuoteCard />
+      <AcceptQuoteCard />
     </CenteredLayout>
   );
 };
