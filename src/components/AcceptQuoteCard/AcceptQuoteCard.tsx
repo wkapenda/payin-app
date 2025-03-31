@@ -18,6 +18,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { setCurrency } from "@/store/currencySlice";
 
+// Global map to ensure auto-update is called only once per quote UUID.
+const autoUpdateCalledMap = new Map<string, boolean>();
+
 const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
   quote: initialQuote,
 }) => {
@@ -28,18 +31,17 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
     { description: "Quoted price expires in", value: "" },
   ]);
   const [remainingTime, setRemainingTime] = useState<number>(0);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   const dispatch = useDispatch();
   const selectedCurrency = useSelector(
     (state: RootState) => state.currency.selectedCurrency
   );
 
-  // Helper function to format milliseconds to HH:MM:SS.
-  const formatTime = (ms: number): string => {
-    return moment.utc(ms).format("HH:mm:ss");
-  };
+  // Helper to format milliseconds into HH:MM:SS.
+  const formatTime = (ms: number): string => moment.utc(ms).format("HH:mm:ss");
 
-  // Update table entries using the latest quote data.
+  // Update table entries from the current quote data.
   const updateTableEntries = (quote: QuoteResponse) => {
     const amountDue = `${quote.paidCurrency.amount} ${
       quote.paidCurrency.currency || ""
@@ -53,7 +55,7 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
     ]);
   };
 
-  // Update table entries whenever quoteData changes.
+  // Update display whenever quoteData changes.
   useEffect(() => {
     updateTableEntries(quoteData);
     if (quoteData.acceptanceExpiryDate) {
@@ -61,21 +63,13 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
     }
   }, [quoteData]);
 
-  // Countdown effect: update every second and auto-trigger update when the timer expires.
+  // Countdown display: update every second.
   useEffect(() => {
-    if (quoteData && quoteData.acceptanceExpiryDate) {
-      let autoUpdating = false;
-      const intervalId = setInterval(() => {
-        const now = Date.now();
-        const diff = quoteData.acceptanceExpiryDate - now;
-        if (diff <= 0 && !autoUpdating) {
-          // Timer expired - call the API update repeatedly
-          autoUpdating = true;
-          handleAutoUpdate().finally(() => {
-            // After update, autoUpdating resets and the new quoteData (with a new timer) takes effect
-            autoUpdating = false;
-          });
-        } else if (diff > 0) {
+    if (updateError) return;
+    const intervalId = setInterval(() => {
+      if (quoteData && quoteData.acceptanceExpiryDate) {
+        const diff = quoteData.acceptanceExpiryDate - Date.now();
+        if (diff > 0) {
           setRemainingTime(diff);
           setTableEntries((prev) =>
             prev.map((entry) =>
@@ -85,26 +79,55 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
             )
           );
         }
-      }, 1000);
-      return () => clearInterval(intervalId);
-    }
-  }, [quoteData]);
+      }
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [quoteData, updateError]);
 
-  // Trigger an automatic update when the timer expires.
+  // Auto-update trigger: schedule a one-time update when the quote expires.
+  useEffect(() => {
+    if (updateError) return;
+    if (!quoteData || !quoteData.acceptanceExpiryDate) return;
+
+    // Prevent duplicate auto-update calls for the same quote.
+    if (autoUpdateCalledMap.has(quoteData.uuid)) return;
+
+    const now = Date.now();
+    const diff = quoteData.acceptanceExpiryDate - now;
+    if (diff <= 0) {
+      autoUpdateCalledMap.set(quoteData.uuid, true);
+      handleAutoUpdate();
+    } else {
+      const timeoutId = setTimeout(() => {
+        autoUpdateCalledMap.set(quoteData.uuid, true);
+        handleAutoUpdate();
+      }, diff);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [quoteData, updateError]);
+
+  // Auto-update function: calls the PUT update API.
   const handleAutoUpdate = async () => {
     try {
       const currency: string =
         quoteData.paidCurrency.currency ?? currencyOptions[0].value;
-      const payload: UpdateQuoteRequest = {
-        currency: currency,
-        payInMethod: "crypto",
-      };
+      const payload: UpdateQuoteRequest = { currency, payInMethod: "crypto" };
 
-      // Update the quote and update state with the new quote data.
       const updatedQuote = (await updateQuoteSummary(
         quoteData.uuid,
         payload
       )) as QuoteResponse;
+
+      // If the response contains the specific error, set error state to stop further calls.
+      if (
+        updatedQuote.code === "MER-PAY-2017" &&
+        updatedQuote.parameter === "payment" &&
+        updatedQuote.message === "cannot update payment with status EXPIRED"
+      ) {
+        setUpdateError(updatedQuote.message);
+        return;
+      }
+      // Update the quote data.
       setQuoteData(updatedQuote);
     } catch (error: any) {
       console.error("Auto-update error:", error);
@@ -132,12 +155,20 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
   // Handler for the Confirm button.
   const handleClick = () => {
     setLoading(true);
-    // Simulate an async action
     setTimeout(() => {
       setLoading(false);
       console.log("Button clicked!");
     }, 2000);
   };
+
+  // If an update error occurred, show the error and stop further auto-updates.
+  if (updateError) {
+    return (
+      <Card>
+        <h3 className="heading font-medium m-[4px]">Error: {updateError}</h3>
+      </Card>
+    );
+  }
 
   return (
     <Card>
