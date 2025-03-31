@@ -1,4 +1,3 @@
-// src/components/layouts/CenteredLayout.tsx
 "use client";
 
 import { CenteredLayoutProps } from "@/types/layouts.types";

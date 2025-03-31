@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +19,16 @@ const Dropdown: React.FC<Readonly<DropdownProps>> = ({
   initialValue,
 }) => {
   const [selected, setSelected] = useState<string | null>(initialValue ?? null);
+
+  // If the initialValue prop changes (e.g., after store rehydration), update state.
+  useEffect(() => {
+    if (
+      initialValue &&
+      options.find((opt) => opt.value === initialValue)?.value !== selected
+    ) {
+      setSelected(initialValue);
+    }
+  }, [initialValue, options, selected]);
 
   const handleSelect = (value: string): void => {
     setSelected(value);
