@@ -5,4 +5,10 @@ export interface QuoteEntry {
 
 export interface QuoteSummaryTableProps {
   entries: QuoteEntry[];
+  isQuoteGenerated?: boolean;
+}
+
+export interface iLabelValue {
+  label: string;
+  value: string;
 }

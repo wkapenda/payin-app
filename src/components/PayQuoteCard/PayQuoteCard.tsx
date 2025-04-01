@@ -3,19 +3,17 @@
 import React, { useState } from "react";
 import Card from "../Card/Card";
 import QuoteSummaryTable from "../QouteSummaryTable/QuoteSummaryTable";
-import PrimaryButton from "../PrimaryButton/PrimaryButton";
+import { QuoteEntry } from "@/types/QuoteSummay.types";
+import { defaultPayQuoteValues } from "@/constants/currencies";
+import { AcceptQuoteCardProps, QuoteResponse } from "@/types/api.types";
 
-const PayQuoteCard = () => {
-  const [loading, setLoading] = useState(false);
-
-  const handleClick = () => {
-    setLoading(true);
-    // Simulate an async action (e.g., an API call)
-    setTimeout(() => {
-      setLoading(false);
-      console.log("Button clicked!");
-    }, 2000);
-  };
+const PayQuoteCard: React.FC<AcceptQuoteCardProps> = ({
+  quote: initialQuote,
+}) => {
+  const [quoteData, setQuoteData] = useState<QuoteResponse>(initialQuote);
+  const [tableEntries, setTableEntries] = useState<QuoteEntry[]>(
+    defaultPayQuoteValues
+  );
 
   return (
     <Card>
@@ -26,13 +24,9 @@ const PayQuoteCard = () => {
       </p>
 
       <div className="quote-summary-container w-full my-[25]">
-        <QuoteSummaryTable />
-      </div>
-      <div className="btn-container w-full">
-        <PrimaryButton
-          label="Confirm"
-          loading={loading}
-          onClick={handleClick}
+        <QuoteSummaryTable
+          entries={tableEntries}
+          isQuoteGenerated={isQuoteUpdateSuccessful}
         />
       </div>
     </Card>

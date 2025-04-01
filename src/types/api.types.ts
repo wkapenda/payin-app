@@ -47,6 +47,10 @@ export interface UpdateQuoteRequest {
   payInMethod: string;
 }
 
+export interface AcceptQuoteRequest {
+  successUrl: string;
+}
+
 export interface CurrencyAmount {
   currency: string | null;
   amount: number;

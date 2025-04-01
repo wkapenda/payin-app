@@ -5,7 +5,10 @@ import LabelledValue from "@/components/LabelledValue/LabelledValue";
 import "./QuoteSummaryTable.scss";
 import { QuoteSummaryTableProps } from "@/types/QuoteSummay.types";
 
-const QuoteSummaryTable: React.FC<QuoteSummaryTableProps> = ({ entries }) => {
+const QuoteSummaryTable: React.FC<QuoteSummaryTableProps> = ({
+  entries,
+  isQuoteGenerated,
+}) => {
   return (
     <div className="quote-summary-table">
       {entries.map((entry) => {
@@ -15,6 +18,7 @@ const QuoteSummaryTable: React.FC<QuoteSummaryTableProps> = ({ entries }) => {
             <LabelledValue
               description={entry.description}
               value={entry.value}
+              isQuoteGenerated={isQuoteGenerated}
             />
           </div>
         );

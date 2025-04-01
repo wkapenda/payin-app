@@ -1,4 +1,5 @@
 import {
+  AcceptQuoteRequest,
   QuoteResponse,
   UpdateQuoteRequest,
   UpdateQuoteResponse,
@@ -28,6 +29,24 @@ export async function updateQuoteSummary(
   );
   if (!res.ok) {
     throw new Error(`Failed to update quote summary: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function acceptQuote(
+  uuid: string,
+  payload: object
+): Promise<AcceptQuoteRequest> {
+  const res = await fetch(
+    `https://api.sandbox.bvnk.com/api/v1/pay/${uuid}/accept/summary`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to accept quote: ${res.statusText}`);
   }
   return res.json();
 }
