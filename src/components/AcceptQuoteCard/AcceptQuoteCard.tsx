@@ -47,6 +47,8 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
   const autoUpdateScheduledRef = useRef(false);
   // Ref to ensure the initial update (on page load) happens only once.
   const initialUpdateCalledRef = useRef(false);
+  // Ref to prevent concurrent manual update calls.
+  const manualUpdateInProgressRef = useRef<boolean>(false);
 
   // Helper to format milliseconds into HH:MM:SS.
   const formatTime = (ms: number): string => moment.utc(ms).format("HH:mm:ss");
@@ -126,17 +128,17 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
     }
   }, [quoteData, updateError]);
 
-  // New effect: if there is a selectedCurrency value, call the updateQuote PUT API on page load.
+  // On mount: if there's a pre-selected currency, update the quote once.
   useEffect(() => {
     if (!initialUpdateCalledRef.current && selectedCurrency) {
       initialUpdateCalledRef.current = true;
-      // We call the same function as manual currency change.
       handleCurrencyChange(selectedCurrency);
     }
-  }, [selectedCurrency]);
+    // Run only on mount.
+  }, []);
 
   // The auto-update function which calls the PUT API.
-  const handleAutoUpdate = async () => {
+  const handleAutoUpdate = async (): Promise<void> => {
     setTableEntries(defaultQuoteValues);
     try {
       const currency: string =
@@ -148,29 +150,20 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
         payload
       )) as QuoteResponse;
 
-      // If the API returns the specific error, update the boolean and set error.
-      if (
-        updatedQuote.code === "MER-PAY-2017" &&
-        updatedQuote.parameter === "payment" &&
-        updatedQuote.message === "cannot update payment with status EXPIRED"
-      ) {
-        router.push(`/payin/${quoteData.uuid}/expired`);
-        setUpdateError(updatedQuote.message);
-        setIsQuoteUpdateSuccessful(false);
-
-        return;
-      }
-      // Otherwise, update state and mark the update as successful.
       setQuoteData(updatedQuote);
       setIsQuoteUpdateSuccessful(true);
-    } catch (error) {
-      console.error("Auto-update error:", error);
+    } catch (error: unknown) {
+      router.push(`/payin/${quoteData.uuid}/expired`);
+      console.log(error);
       setIsQuoteUpdateSuccessful(false);
+      setUpdateError("Payment expired");
     }
   };
 
   // Called when a new currency is selected via the dropdown.
-  const handleCurrencyChange = async (value: string) => {
+  const handleCurrencyChange = async (value: string): Promise<void> => {
+    if (manualUpdateInProgressRef.current) return; // Prevent duplicate manual updates.
+    manualUpdateInProgressRef.current = true;
     // Reset table entries to default state before making the API call.
     setTableEntries(defaultQuoteValues);
 
@@ -178,7 +171,6 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
       currency: value,
       payInMethod: "crypto",
     };
-
     dispatch(setCurrency(value));
 
     try {
@@ -186,52 +178,34 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
         quoteData.uuid,
         payload
       )) as QuoteResponse;
-      // Update the UI with the new quote data.
       setQuoteData(updatedQuote);
       setIsQuoteUpdateSuccessful(true);
-    } catch (error: any) {
-      // Check if the error payload contains an errorList with an expired error.
-      const expiredError = error?.errorList?.find(
-        (err: any) =>
-          err.code === "MER-PAY-2004" ||
-          (typeof err.message === "string" &&
-            err.message.toLowerCase().includes("expired"))
-      );
-      if (expiredError) {
-        // Redirect to the expired page.
-        router.push(`/payin/${quoteData.uuid}/expired`);
-        return;
-      }
-
-      console.error("Error updating quote summary:", error);
+    } catch (error: unknown) {
+      router.push(`/payin/${quoteData.uuid}/expired`);
+      console.log(error);
+      manualUpdateInProgressRef.current = false;
       setIsQuoteUpdateSuccessful(false);
+      setUpdateError("Payment expired");
+    } finally {
+      manualUpdateInProgressRef.current = false;
     }
   };
 
-  // Handler for the Confirm button.
-  const handleClick = async () => {
+  const handleClick = async (): Promise<void> => {
     setLoading(true);
     try {
-      // Construct payload as per the AcceptQuoteRequest interface.
       const payload: AcceptQuoteRequest = acceptQuotePayload;
       await acceptQuote(quoteData.uuid, payload);
-      // On success, redirect to /payin/<UUID>/pay
+      // On success, redirect to the Pay Quote page.
       router.push(`/payin/${quoteData.uuid}/pay`);
-    } catch (error: any) {
-      console.error("Failed to accept quote:", error);
+    } catch (error: unknown) {
+      // If the API call fails, assume the payment has expired.
+      router.push(`/payin/${quoteData.uuid}/expired`);
+      console.log(error);
     } finally {
       setLoading(false);
     }
   };
-
-  // If an update error occurred, show the error and stop further auto-updates.
-  if (updateError) {
-    return (
-      <Card>
-        <h3 className="heading font-medium m-[4px]">Error: {updateError}</h3>
-      </Card>
-    );
-  }
 
   return (
     <Card>

@@ -8,6 +8,7 @@ import { QuoteResponse } from "@/types/api.types";
 import { QuoteEntry } from "@/types/QuoteSummay.types";
 import { defaultPayQuoteValues } from "@/constants/currencies";
 import { useRouter } from "next/navigation";
+import { getCurrencyLabel } from "@/utils/helpers";
 
 interface PayQuoteCardProps {
   quote: QuoteResponse;
@@ -24,6 +25,8 @@ const PayQuoteCard: React.FC<PayQuoteCardProps> = ({
 
   // Format time (HH:MM:SS) from milliseconds
   const formatTime = (ms: number): string => moment.utc(ms).format("HH:mm:ss");
+
+  const label = getCurrencyLabel(acceptedQuote.paidCurrency?.currency);
 
   // Update timeLeft based on expiryDate
   useEffect(() => {
@@ -81,7 +84,7 @@ const PayQuoteCard: React.FC<PayQuoteCardProps> = ({
 
   return (
     <Card>
-      <h3 className="heading font-medium m-[4px]">Pay with Bitcoin</h3>
+      <h3 className="heading font-medium m-[4px]">Pay with {label}</h3>
       <p className="value-label text-center my-[25px]">
         To complete this payment, send the amount due to the BTC address
         provided below.

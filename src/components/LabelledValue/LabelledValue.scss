@@ -1,20 +1,15 @@
 @use "../../styles/main" as *;
 
-.labelled-value-image-container {
-  .labelled-value {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
+.labelled-value {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
 
-    &__value {
-      .copy-text {
-        color: $primary-color-btn;
-      }
+  &__value {
+    .copy-text {
+      color: $primary-color-btn;
     }
-  }
-
-  .image {
   }
 }

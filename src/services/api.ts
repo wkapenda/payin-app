@@ -50,3 +50,21 @@ export async function acceptQuote(
   }
   return res.json();
 }
+
+export async function refreshQuoteSummary(
+  uuid: string,
+  payload: UpdateQuoteRequest
+): Promise<UpdateQuoteResponse> {
+  const res = await fetch(
+    `https://api.sandbox.bvnk.com/api/v1/pay/${uuid}/summary`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to refresh quote summary: ${res.statusText}`);
+  }
+  return res.json();
+}
