@@ -28,12 +28,19 @@ The application simulates a complete payment journey using a sandbox API provide
 
 2. **Install Dependencies**
 
-In the project root directory, run:
+   In the project root directory, run:
 
-npm install
-Run the Application
+   ```bash
+   npm install
 
-3. **Start the development server by running:**
+   ```
 
-npm run dev
-The app will run on http://localhost:3000. Open this URL in your browser to view the application.
+3. **Run the Application**
+
+   Start the development server by running:
+
+   ```bash
+   npm run dev
+   The app will run on http://localhost:3000. Open this URL in your browser to view the application.
+
+   ```
