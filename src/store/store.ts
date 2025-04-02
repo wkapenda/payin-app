@@ -15,7 +15,6 @@ import storageSession from "redux-persist/lib/storage/session";
 const persistConfig = {
   key: "currency",
   storage: storageSession,
-  //   whitelist: ["currency"],
 };
 
 const persistedCurrencyReducer = persistReducer(persistConfig, currencyReducer);

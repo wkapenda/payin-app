@@ -9,7 +9,7 @@ const ExpiryCard = () => {
     <Card padding="62px 77px 62px 66px">
       <div className="icon-container">
         <Image
-          src="/circle-alert-major.svg" // Place your SVG file in the public/icons folder
+          src="/circle-alert-major.svg"
           alt="Exclamation Icon"
           width={48}
           height={48}

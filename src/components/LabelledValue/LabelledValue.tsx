@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./LabelledValue.scss";
 import { LabelledValueProps } from "@/types/LabelledValues.types";
+import { shortenValue } from "@/utils/helpers";
 
 const LabelledValue: React.FC<LabelledValueProps> = ({
   description,
@@ -24,17 +25,6 @@ const LabelledValue: React.FC<LabelledValueProps> = ({
     } catch (error) {
       console.error("Copy failed", error);
     }
-  };
-
-  // Shorten the value if it is too long.
-  const shortenValue = (val: string): string => {
-    const threshold = 15;
-    if (val.length <= threshold) return val;
-    const prefixLength = 7;
-    const suffixLength = 5;
-    return `${val.substring(0, prefixLength)}...${val.substring(
-      val.length - suffixLength
-    )}`;
   };
 
   // Display either the shortened value or a spinner if the quote is not generated yet.

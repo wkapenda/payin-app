@@ -2,7 +2,6 @@
 
 import React from "react";
 import CenteredLayout from "@/components/layouts/CenteredLayout";
-import "./Loader.scss";
 
 const Loader: React.FC = () => {
   return (
