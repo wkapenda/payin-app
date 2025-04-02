@@ -31,9 +31,7 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [tableEntries, setTableEntries] =
     useState<QuoteEntry[]>(defaultQuoteValues);
-  const [remainingTime, setRemainingTime] = useState<number>(0);
   const [updateError, setUpdateError] = useState<string | null>(null);
-  // This boolean becomes true if the PUT update call is successful and false if it fails.
   const [isQuoteUpdateSuccessful, setIsQuoteUpdateSuccessful] =
     useState<boolean>(false);
 
@@ -43,17 +41,16 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
     (state: RootState) => state.currency.selectedCurrency
   );
 
-  // Ref to prevent scheduling duplicate auto-update calls.
+  // Refs to prevent duplicate updates.
   const autoUpdateScheduledRef = useRef(false);
-  // Ref to ensure the initial update (on page load) happens only once.
   const initialUpdateCalledRef = useRef(false);
-  // Ref to prevent concurrent manual update calls.
-  const manualUpdateInProgressRef = useRef<boolean>(false);
+  const manualUpdateInProgressRef = useRef(false);
 
-  // Helper to format milliseconds into HH:MM:SS.
+  // Helper: format milliseconds into HH:MM:SS.
   const formatTime = (ms: number): string => moment.utc(ms).format("HH:mm:ss");
 
-  const updateTableEntries = (quote: QuoteResponse) => {
+  // Update table entries using current quote data.
+  const updateTableEntries = (quote: QuoteResponse): void => {
     const amountDue = `${quote.paidCurrency.amount} ${
       quote.paidCurrency.currency || ""
     }`.trim();
@@ -75,21 +72,17 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
   // Update display whenever quoteData changes.
   useEffect(() => {
     updateTableEntries(quoteData);
-    if (quoteData.acceptanceExpiryDate) {
-      setRemainingTime(quoteData.acceptanceExpiryDate - Date.now());
-    }
-    // Reset the auto-update scheduler when the quote changes.
+    // Reset auto-update scheduler when quote data changes.
     autoUpdateScheduledRef.current = false;
   }, [quoteData]);
 
-  // Countdown display: update every second.
+  // Countdown: update the "Quoted price expires in" field every second.
   useEffect(() => {
     if (updateError) return;
     const intervalId = setInterval(() => {
-      if (quoteData && quoteData.acceptanceExpiryDate) {
+      if (quoteData?.acceptanceExpiryDate) {
         const diff = quoteData.acceptanceExpiryDate - Date.now();
         if (diff > 0) {
-          setRemainingTime(diff);
           setTableEntries((prev) =>
             prev.map((entry) =>
               entry.description === "Quoted price expires in"
@@ -103,68 +96,60 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
     return () => clearInterval(intervalId);
   }, [quoteData, updateError]);
 
-  // Auto-update trigger: schedule one update call when the quote expires.
+  // Auto-update: trigger a refresh when the acceptanceExpiryDate is reached.
   useEffect(() => {
-    if (updateError) return;
-    if (!quoteData || !quoteData.acceptanceExpiryDate) return;
-    if (autoUpdateScheduledRef.current) return; // already scheduled
-
-    const now = Date.now();
-    const diff = quoteData.acceptanceExpiryDate - now;
-
-    if (diff <= 0) {
-      autoUpdateScheduledRef.current = true;
-      handleAutoUpdate().finally(() => {
-        autoUpdateScheduledRef.current = false;
-      });
-    } else {
-      autoUpdateScheduledRef.current = true;
-      const timeoutId = setTimeout(() => {
-        handleAutoUpdate().finally(() => {
-          autoUpdateScheduledRef.current = false;
-        });
-      }, diff);
-      return () => clearTimeout(timeoutId);
-    }
+    if (updateError || !quoteData?.acceptanceExpiryDate) return;
+    if (autoUpdateScheduledRef.current) return;
+    const diff = quoteData.acceptanceExpiryDate - Date.now();
+    autoUpdateScheduledRef.current = true;
+    const timeoutId =
+      diff <= 0
+        ? // If already expired, update immediately.
+          (async () => {
+            await handleAutoUpdate();
+            autoUpdateScheduledRef.current = false;
+          })()
+        : setTimeout(async () => {
+            await handleAutoUpdate();
+            autoUpdateScheduledRef.current = false;
+          }, diff);
+    return () => clearTimeout(timeoutId as NodeJS.Timeout);
   }, [quoteData, updateError]);
 
-  // On mount: if there's a pre-selected currency, update the quote once.
+  // On mount: if a pre-selected currency exists, update the quote once.
   useEffect(() => {
     if (!initialUpdateCalledRef.current && selectedCurrency) {
       initialUpdateCalledRef.current = true;
       handleCurrencyChange(selectedCurrency);
     }
-    // Run only on mount.
+    // Run only once on mount.
   }, []);
 
-  // The auto-update function which calls the PUT API.
+  // Auto-update function: calls updateQuoteSummary API.
   const handleAutoUpdate = async (): Promise<void> => {
     setTableEntries(defaultQuoteValues);
     try {
-      const currency: string =
+      const currency =
         quoteData.paidCurrency.currency ?? currencyOptions[0].value;
       const payload: UpdateQuoteRequest = { currency, payInMethod: "crypto" };
-
       const updatedQuote = (await updateQuoteSummary(
         quoteData.uuid,
         payload
       )) as QuoteResponse;
-
       setQuoteData(updatedQuote);
       setIsQuoteUpdateSuccessful(true);
     } catch (error: unknown) {
-      router.push(`/payin/${quoteData.uuid}/expired`);
       console.log(error);
       setIsQuoteUpdateSuccessful(false);
       setUpdateError("Payment expired");
+      router.push(`/payin/${quoteData.uuid}/expired`);
     }
   };
 
-  // Called when a new currency is selected via the dropdown.
+  // Manual update: called when a new currency is selected.
   const handleCurrencyChange = async (value: string): Promise<void> => {
-    if (manualUpdateInProgressRef.current) return; // Prevent duplicate manual updates.
+    if (manualUpdateInProgressRef.current) return;
     manualUpdateInProgressRef.current = true;
-    // Reset table entries to default state before making the API call.
     setTableEntries(defaultQuoteValues);
 
     const payload: UpdateQuoteRequest = {
@@ -181,27 +166,25 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
       setQuoteData(updatedQuote);
       setIsQuoteUpdateSuccessful(true);
     } catch (error: unknown) {
-      router.push(`/payin/${quoteData.uuid}/expired`);
       console.log(error);
-      manualUpdateInProgressRef.current = false;
       setIsQuoteUpdateSuccessful(false);
       setUpdateError("Payment expired");
+      router.push(`/payin/${quoteData.uuid}/expired`);
     } finally {
       manualUpdateInProgressRef.current = false;
     }
   };
 
+  // Confirm handler: calls acceptQuote API.
   const handleClick = async (): Promise<void> => {
     setLoading(true);
     try {
       const payload: AcceptQuoteRequest = acceptQuotePayload;
       await acceptQuote(quoteData.uuid, payload);
-      // On success, redirect to the Pay Quote page.
       router.push(`/payin/${quoteData.uuid}/pay`);
     } catch (error: unknown) {
-      // If the API call fails, assume the payment has expired.
-      router.push(`/payin/${quoteData.uuid}/expired`);
       console.log(error);
+      router.push(`/payin/${quoteData.uuid}/expired`);
     } finally {
       setLoading(false);
     }
