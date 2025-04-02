@@ -4,6 +4,14 @@ export interface CurrencyAmount {
   actual: number;
 }
 
+export interface QuoteAddress {
+  address: string;
+  tag?: string | null;
+  protocol?: string;
+  uri?: string;
+  alternatives?: unknown[];
+}
+
 export interface QuoteResponse {
   uuid: string;
   merchantDisplayName: string;
@@ -24,7 +32,7 @@ export interface QuoteResponse {
   networkFeeCurrency: CurrencyAmount;
   displayRate: unknown;
   exchangeRate: unknown;
-  address: unknown;
+  address: QuoteAddress;
   returnUrl: string;
   redirectUrl: string;
   transactions: unknown[];

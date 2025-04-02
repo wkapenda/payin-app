@@ -1,11 +1,8 @@
 @use "../../styles/main" as *;
 
 .card {
-  width: 100%;
-  max-width: 460px;
   @include flex-center;
-  // gap: 25px;
-  padding: 25px;
+  margin: 12px;
   border-radius: 10px;
   background-color: $card-bg;
 }

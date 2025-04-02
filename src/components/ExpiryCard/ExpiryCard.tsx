@@ -6,7 +6,7 @@ import Image from "next/image";
 
 const ExpiryCard = () => {
   return (
-    <Card>
+    <Card padding="62px 77px 62px 66px">
       <div className="icon-container">
         <Image
           src="/circle-alert-major.svg" // Place your SVG file in the public/icons folder

@@ -8,14 +8,14 @@ export const currencyOptions: iLabelValue[] = [
 ];
 
 export const defaultQuoteValues: QuoteEntry[] = [
-  { description: "Amount due", value: "" },
-  { description: "Quoted price expires in", value: "" },
+  { description: "Amount due", value: "", isCopy: false },
+  { description: "Quoted price expires in", value: "", isCopy: false },
 ];
 
 export const defaultPayQuoteValues: QuoteEntry[] = [
-  { description: "Amount due", value: "" },
-  { description: "BTC address", value: "" },
-  { description: "Time left to pay", value: "" },
+  { description: "Amount due", value: "", isCopy: true },
+  { description: "BTC address", value: "", isCopy: true, qrCodeUrl: "" },
+  { description: "Time left to pay", value: "", isCopy: false },
 ];
 
 export const acceptQuotePayload: AcceptQuoteRequest = { successUrl: "no_url" };

@@ -60,8 +60,12 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
       : "";
     if (isQuoteUpdateSuccessful) {
       setTableEntries([
-        { description: "Amount due", value: amountDue },
-        { description: "Quoted price expires in", value: expiresIn },
+        { description: "Amount due", value: amountDue, isCopy: false },
+        {
+          description: "Quoted price expires in",
+          value: expiresIn,
+          isCopy: false,
+        },
       ]);
     }
   };
@@ -150,14 +154,16 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
         updatedQuote.parameter === "payment" &&
         updatedQuote.message === "cannot update payment with status EXPIRED"
       ) {
+        router.push(`/payin/${quoteData.uuid}/expired`);
         setUpdateError(updatedQuote.message);
         setIsQuoteUpdateSuccessful(false);
+
         return;
       }
       // Otherwise, update state and mark the update as successful.
       setQuoteData(updatedQuote);
       setIsQuoteUpdateSuccessful(true);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Auto-update error:", error);
       setIsQuoteUpdateSuccessful(false);
     }
@@ -165,21 +171,38 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
 
   // Called when a new currency is selected via the dropdown.
   const handleCurrencyChange = async (value: string) => {
+    // Reset table entries to default state before making the API call.
     setTableEntries(defaultQuoteValues);
+
     const payload: UpdateQuoteRequest = {
       currency: value,
       payInMethod: "crypto",
     };
+
     dispatch(setCurrency(value));
+
     try {
       const updatedQuote = (await updateQuoteSummary(
         quoteData.uuid,
         payload
       )) as QuoteResponse;
-      // For the manual update, mark the update as successful.
+      // Update the UI with the new quote data.
       setQuoteData(updatedQuote);
       setIsQuoteUpdateSuccessful(true);
     } catch (error: any) {
+      // Check if the error payload contains an errorList with an expired error.
+      const expiredError = error?.errorList?.find(
+        (err: any) =>
+          err.code === "MER-PAY-2004" ||
+          (typeof err.message === "string" &&
+            err.message.toLowerCase().includes("expired"))
+      );
+      if (expiredError) {
+        // Redirect to the expired page.
+        router.push(`/payin/${quoteData.uuid}/expired`);
+        return;
+      }
+
       console.error("Error updating quote summary:", error);
       setIsQuoteUpdateSuccessful(false);
     }
@@ -210,8 +233,6 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
     );
   }
 
-  console.log("is quote gen", isQuoteUpdateSuccessful);
-  console.log("selected value", selectedCurrency);
   return (
     <Card>
       <h3 className="heading font-medium m-[4px]">

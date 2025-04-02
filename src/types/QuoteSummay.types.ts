@@ -1,6 +1,8 @@
 export interface QuoteEntry {
   description: string;
   value: string;
+  isCopy: boolean;
+  qrCodeUrl?: string;
 }
 
 export interface QuoteSummaryTableProps {
