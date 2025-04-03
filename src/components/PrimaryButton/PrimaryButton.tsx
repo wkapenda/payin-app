@@ -4,13 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import "./PrimaryButton.scss";
-
-export interface PrimaryButtonProps {
-  label?: string;
-  loading?: boolean;
-  disabled?: boolean;
-  onClick?: () => void;
-}
+import { PrimaryButtonProps } from "@/types/PrimaryButton.types";
 
 const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   label = "Confirm",

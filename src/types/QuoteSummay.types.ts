@@ -1,3 +1,5 @@
+import { QuoteResponse } from "./api.types";
+
 export interface QuoteEntry {
   description: string;
   value: string;
@@ -13,4 +15,8 @@ export interface QuoteSummaryTableProps {
 export interface iLabelValue {
   label: string;
   value: string;
+}
+
+export interface PayQuoteCardProps {
+  quote: QuoteResponse;
 }

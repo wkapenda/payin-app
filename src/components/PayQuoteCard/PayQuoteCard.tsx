@@ -4,15 +4,10 @@ import React, { useEffect, useState } from "react";
 import moment from "moment";
 import Card from "../Card/Card";
 import QuoteSummaryTable from "../QouteSummaryTable/QuoteSummaryTable";
-import { QuoteResponse } from "@/types/api.types";
-import { QuoteEntry } from "@/types/QuoteSummay.types";
+import { PayQuoteCardProps, QuoteEntry } from "@/types/QuoteSummay.types";
 import { defaultPayQuoteValues } from "@/constants/currencies";
 import { useRouter } from "next/navigation";
 import { getCurrencyLabel } from "@/utils/helpers";
-
-interface PayQuoteCardProps {
-  quote: QuoteResponse;
-}
 
 const PayQuoteCard: React.FC<PayQuoteCardProps> = ({
   quote: acceptedQuote,
@@ -79,8 +74,6 @@ const PayQuoteCard: React.FC<PayQuoteCardProps> = ({
       router.push(`/payin/${acceptedQuote.uuid}/expired`);
     }
   }, [acceptedQuote.status, acceptedQuote.uuid, router]);
-
-  console.log("qrCodeUrl", qrCodeUrl);
 
   return (
     <Card>

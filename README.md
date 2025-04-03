@@ -41,6 +41,43 @@ The application simulates a complete payment journey using a sandbox API provide
 
    ```bash
    npm run dev
-   The app will run on http://localhost:3000. Open this URL in your browser to view the application.
 
    ```
+
+   The app will run on http://localhost:3000. Open this URL in your browser to view the application.
+
+## Running Tests and Generating Coverage
+
+This project uses Jest along with React Testing Library for unit and integration testing.
+
+**Running Tests**
+
+To run the tests, execute the following command in the project root:
+
+```bash
+npm run test
+
+```
+
+This command will run all test suites and display the results in the terminal.
+
+**Generating Test Coverage**
+
+To generate a test coverage report, use the following command:
+
+```bash
+npm run coverage
+
+```
+
+The coverage command will produce a detailed report in your terminal and create a coverage folder in the project root. You can open the HTML report (usually located at coverage/lcov-report/index.html) in your browser for a detailed view of the test coverage.
+
+## Assumptions
+
+- **API Failures:**  
+  It is assumed that any API call failure is due to payment expiry. This assumption guides the error handling and redirection logic throughout the application.
+
+## Issues
+
+- **Quote Update Timeout:**  
+  There is an issue where the quote update API fails to refresh the quote after the initial 30-second countdown, resulting in a timeout. Consequently, if the user clicks the confirm payment button when the quote has not been updated, the acceptance API call fails because the payment is considered expired. Further investigation is needed to resolve this behavior.

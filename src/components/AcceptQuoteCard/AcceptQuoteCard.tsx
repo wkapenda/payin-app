@@ -185,8 +185,6 @@ const AcceptQuoteCard: React.FC<AcceptQuoteCardProps> = ({
     } catch (error: unknown) {
       console.log(error);
       router.push(`/payin/${quoteData.uuid}/expired`);
-    } finally {
-      setLoading(false);
     }
   };
 
